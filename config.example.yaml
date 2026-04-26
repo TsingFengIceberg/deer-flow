@@ -12,7 +12,7 @@
 # ============================================================================
 # Bump this number when the config schema changes.
 # Run `make config-upgrade` to merge new fields into your local config.yaml.
-config_version: 7
+config_version: 8
 
 # ============================================================================
 # Logging
@@ -325,6 +325,27 @@ models:
   #     extra_body:
   #       chat_template_kwargs:
   #         enable_thinking: true
+
+
+  # Example: Qwen3-Coder deployed on MindIE Engine
+  # - name: Qwen3_Coder_480B_MindIE
+  #   display_name: Qwen3-Coder-480B (MindIE)
+  #   use: deerflow.models.mindie_provider:MindIEChatModel
+  #   model: Qwen3-Coder-480B-A35B-Instruct-Client
+  #   base_url: http://localhost:8989/v1
+  #   api_key: $OPENAI_API_KEY
+  #   temperature: 0
+  #   max_retries: 1
+  #   supports_thinking: false
+  #   supports_vision: false
+  #   supports_reasoning_effort: false
+  #   # --- Advanced Network Settings ---
+  #   # Due to MindIE's streaming limitations with tool calling, the provider
+  #   # uses mock-streaming (awaiting full generation). Extended timeouts are required.
+  #   read_timeout: 900.0     # 15 minutes to prevent drops during long document generation
+  #   connect_timeout: 30.0
+  #   write_timeout: 60.0
+  #   pool_timeout: 30.0
 
 # ============================================================================
 # Tool Groups Configuration
@@ -726,6 +747,19 @@ summarization:
   # The prompt should guide the model to extract important context
   summary_prompt: null
 
+  # Recently-loaded skill files are excluded from summarization so the agent
+  # does not lose skill instructions after a compression pass. Claude Code uses
+  # a similar strategy (keep the most recent ~5 skills, ~25k total tokens, with
+  # a ~5k cap per skill). Set preserve_recent_skill_count to 0 to disable.
+  preserve_recent_skill_count: 5
+  preserve_recent_skill_tokens: 25000
+  preserve_recent_skill_tokens_per_skill: 5000
+  skill_file_read_tool_names:
+    - read_file
+    - read
+    - view
+    - cat
+
 # ============================================================================
 # Memory Configuration
 # ============================================================================
@@ -833,7 +867,7 @@ checkpointer:
 #     enabled: false
 #     bot_token: $SLACK_BOT_TOKEN     # xoxb-...
 #     app_token: $SLACK_APP_TOKEN     # xapp-... (Socket Mode)
-#     allowed_users: []               # empty = allow all
+#     allowed_users: []               # empty = allow all; can also be a single Slack user ID string, e.g. U123456, but list form is recommended
 #
 #   telegram:
 #     enabled: false
